@@ -40,13 +40,17 @@ def booleanTunnel(data,averageLevel):
     return (BBU,BBD)
 
 def Trade(trading,price,dAmount,principal,shareAmount):
-    if trading == 0:
+    fee = 0.001425*price*dAmount;
+    if fee <= 0.02:
+        fee = 0.02
+    tax = 0.003*price*dAmount;
+    if trading == 'buy':
         tradingFactor = -1;
-        principal = principal+tradingFactor*price*dAmount;
+        principal = principal+tradingFactor*price*dAmount-fee;
         shareAmount = shareAmount-tradingFactor*dAmount;
-    elif trading == 1 and shareAmount >= dAmount:
+    elif trading == 'sell' and shareAmount >= dAmount:
         tradingFactor = 1;
-        principal = principal+tradingFactor*price*dAmount;
+        principal = principal+tradingFactor*price*dAmount-fee-tax;
         shareAmount = shareAmount-tradingFactor*dAmount
     return (principal,shareAmount)
 
