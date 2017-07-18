@@ -127,7 +127,7 @@ if __name__ == "__main__":
 #    database = {};
     start = str(date2epoch('2014-07-07'));
     stop = str(date2epoch('2017-07-07'));
-    stockCode = ['5508'];
+    stockCode = ['0056'];
 
     driver = webdriver.Chrome();
     for i in stockCode:

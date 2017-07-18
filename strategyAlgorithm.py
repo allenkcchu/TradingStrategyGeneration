@@ -13,31 +13,35 @@ import matplotlib.pyplot as plt;
 # MA40
 
 def movingAverage(data,averageLevel):
-    dim = np.shape(data);
-    if len(dim) == 1:
-        MA = np.zeros((1,dim[0]-averageLevel));
-        for N in range(averageLevel,dim[0]):
-            MA[0,N-averageLevel] = np.sum(data[N-averageLevel:N])/averageLevel;
-    else:
-        MA = np.zeros((dim[0],dim[1]-averageLevel));
-        for N in range(averageLevel,dim[1]):
-            MA[:,N-averageLevel] = np.sum(data[:dim[0],N-averageLevel:N],axis=1)/averageLevel;
+    MA = np.zeros((len(data)-averageLevel));
+    for N in range(len(data)):
+        if N >= averageLevel:
+            MA[N-averageLevel] = np.sum(data[N-averageLevel:N])/averageLevel;
     return MA
 
-def booleanTunnel(data,averageLevel):
-    dim = np.shape(data);
-    if len(dim) == 1:
-        BB = np.zeros((1,dim[0]-averageLevel));
-        for N in range(averageLevel,dim[0]):
-            BB[:,N-averageLevel] = np.std(data[N-averageLevel:N]);
-    else:
-        BB = np.zeros((dim[0],dim[1]-averageLevel));
-        for N in range(averageLevel,dim[1]):
-            BB[:,N-averageLevel] = np.std(data[:dim[0],N-averageLevel:N],axis=1);
+def bollingerBand(data,averageLevel):
+    BB = np.zeros((len(data)-averageLevel));
+    for N in range(len(data)):
+        if N >= averageLevel:
+            BB[N-averageLevel] = np.std(data[N-averageLevel:N])
     MA = movingAverage(data,averageLevel);
     BBU = MA+2.1*BB;
     BBD = MA-2.1*BB;
     return (BBU,BBD)
+
+def onBalanceVolume(data,volume,averageLevel):
+    sign = np.hstack((0,np.sign(np.diff(data))));
+    OBV = np.zeros((len(data)));
+    for N in range(len(data)):
+        if N < averageLevel:
+            if N == 0:
+                OBV[N] = 0;
+            else:
+                OBV[N] = OBV[N-1]+sign[N]*volume[N];
+        else:
+            OBV[N] = np.sum(OBV[N-averageLevel:N])/averageLevel+sign[N]*volume[N];
+
+    return OBV
 
 def Trade(trading,price,dAmount,principal,shareAmount):
     fee = 0.001425*price*dAmount;
@@ -54,9 +58,9 @@ def Trade(trading,price,dAmount,principal,shareAmount):
         shareAmount = shareAmount-tradingFactor*dAmount
     return (principal,shareAmount)
 
-#database = np.load('170508_Database.npy');
-#database = database.item();
-#data = database['2371'];
+database = np.load('170508_Database.npy');
+database = database.item();
+data = database['2330'];
 #closePriceArray = [];
 #for i in sorted(database.keys()):
 #    if len(closePriceArray) == 0:
@@ -66,7 +70,14 @@ def Trade(trading,price,dAmount,principal,shareAmount):
 #
 #r = np.corrcoef(closePriceArray.astype(np.float));
 
-#v0 = np.transpose(data[6,:].astype(np.float));
-#v1 = movingAverage(v0,40);
-#BBU,BBD = booleanTunnel(v0,40);
+
+v0 = np.transpose(data[6,:].astype(np.float));
+v1 = movingAverage(v0,40);
+v2 = 0.5*(np.transpose(data[4,:]).astype(np.float)+np.transpose(data[5,:]).astype(np.float));
+v3 = np.transpose(data[1,:]).astype(np.float);
+v4_1 = onBalanceVolume(v2,v3,1);
+v4_2 = onBalanceVolume(v2,v3,5);
+v4_3 = onBalanceVolume(v2,v3,10);
+
+BBU,BBD = bollingerBand(v0,40);
 #v0
