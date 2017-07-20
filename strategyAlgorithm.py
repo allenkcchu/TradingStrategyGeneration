@@ -58,9 +58,11 @@ def Trade(trading,price,dAmount,principal,shareAmount):
         shareAmount = shareAmount-tradingFactor*dAmount
     return (principal,shareAmount)
 
+
+
 database = np.load('170508_Database.npy');
 database = database.item();
-data = database['2330'];
+data = database['0056'];
 #closePriceArray = [];
 #for i in sorted(database.keys()):
 #    if len(closePriceArray) == 0:
@@ -70,14 +72,42 @@ data = database['2330'];
 #
 #r = np.corrcoef(closePriceArray.astype(np.float));
 
+averageLevel = 20;
+BBU,BBD = bollingerBand(np.transpose(data[6,:].astype(np.float)),averageLevel);
+volume = np.transpose(data[1,:]).astype(np.float);
+p0 = np.transpose(data[6,averageLevel:].astype(np.float));
+p1 = movingAverage(np.transpose(data[6,:].astype(np.float)),averageLevel);
+p2 = onBalanceVolume(0.5*(np.transpose(data[4,averageLevel:]).astype(np.float)+np.transpose(data[5,averageLevel:]).astype(np.float)),volume,5);
+p3 = (np.transpose(data[6,averageLevel:].astype(np.float))-np.transpose(data[3,averageLevel:].astype(np.float)))/np.transpose(data[6,averageLevel:].astype(np.float));
+p4 = (p0-BBD)/(BBU-BBD)*100;
+position = np.vstack((p0,p1,p2,p3,p4));
+dposition = np.diff(position,1);
+std = np.std(position,1);
+mean = np.mean(position,1);
+pmod = np.zeros(np.shape(position));
+for N in range(np.size(position,0)):
+    pmod[N,:] = (position[N,:]-mean[N])/std[N];
 
-v0 = np.transpose(data[6,:].astype(np.float));
-v1 = movingAverage(v0,40);
-v2 = 0.5*(np.transpose(data[4,:]).astype(np.float)+np.transpose(data[5,:]).astype(np.float));
-v3 = np.transpose(data[1,:]).astype(np.float);
-v4_1 = onBalanceVolume(v2,v3,1);
-v4_2 = onBalanceVolume(v2,v3,5);
-v4_3 = onBalanceVolume(v2,v3,10);
 
-BBU,BBD = bollingerBand(v0,40);
-#v0
+time1 = [];
+price1 = [];
+time2 = [];
+price2 = [];
+
+fig=plt.figure();
+plt.ion();
+plt.show();
+for N in range(len(p0)):
+    fig.clear();
+    plt.axis([0,500,-3,3]);
+    
+    time1.append(N);
+    price1.append(pmod[0,N]);
+    if pmod[0,N] <= -1:
+        time2.append(N);
+        price2.append(pmod[0,N]);
+        plt.plot(time1,price1,'k',time2,price2,'ro')
+    else:
+        plt.plot(time1,price1,'k',time2,price2,'ro')
+    
+    plt.pause(0.01);
