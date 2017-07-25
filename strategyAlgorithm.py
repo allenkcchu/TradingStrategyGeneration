@@ -103,16 +103,51 @@ priceB = [];
 timeS = [];
 priceS = [];
 
-#bcon1 = (pmod[0,:]<-1);
-bcon1 = (praw[0,:]>=praw[1,:]);
-bcon2 = (dpraw[1,:]>0);
-bcon = np.vstack((bcon1,bcon2));
-bpts = np.all(bcon,0);
+enable = (np.random.randint(0,2,(5))==1);
+bparams = np.random.uniform(-1,1,(5));
+comparison = np.random.randint(-2,3,(5));
+for N,i in enumerate(enable):
+    if enable[N]:
+        if comparison[N] == -2:
+            tmp = (pmod[N,:] <= bparams[N]);
+        elif comparison[N] == -1:
+            tmp = (pmod[N,:] < bparams[N]);
+        elif comparison[N] == 0:
+            tmp = (pmod[N,:] == bparams[N]);
+        elif comparison[N] == 1:
+            tmp = (pmod[N,:] > bparams[N]);
+        elif comparison[N] == 2:
+            tmp = (pmod[N,:] >= bparams[N]);
+            
+        if N == 0:
+            bcont = tmp;
+        else:
+            bcont = np.vstack((bcont,tmp));
+#    else:
+#        bcont = (np.ones(np.shape(pmod)) == 0);
 
-#scon1 = (pmod[0,:]>1);
-scon1 = (praw[0,:]<=praw[1,:])
-scon2 = (dpraw[1,:]<0);
-scon = np.vstack((scon1,scon2));
+try:
+    bpts = np.all(bcont,0);
+except:
+    bpts = np.ones((np.size(pmod,1)))==0
+            
+#bcon1 = (pmod[0,:]<bparams[0]);
+#bcon2 = (pmod[1,:]<bparams[1]);
+#bcon3 = (pmod[2,:]<bparams[2]);
+#bcon4 = (pmod[3,:]<bparams[3]);
+#bcon5 = (pmod[4,:]<bparams[4]);
+#bcon6 = (pmod[5,:]<bparams[5]);
+#bcon = np.vstack((bcon1,bcon2,bcon3,bcon4,bcon5,bcon6));
+#bpts = np.all(bcon,0);
+
+sparams = np.random.uniform(-3,3,(6));
+scon1 = (pmod[0,:]>sparams[0]);
+scon2 = (pmod[1,:]>sparams[1]);
+scon3 = (pmod[2,:]>sparams[2]);
+scon4 = (pmod[3,:]>sparams[3]);
+scon5 = (pmod[4,:]>sparams[4]);
+scon6 = (pmod[5,:]>sparams[5]);
+scon = np.vstack((scon1,scon2,scon3,scon4,scon5,scon6));
 spts = np.all(scon,0);
 
 plt.figure();plt.plot(time0,price0);
@@ -120,12 +155,12 @@ for i in time0:
     if bpts[i]:
         (capital,share,v) = Trade('buy',praw[0,i],1,capital,share);
         if v:
-            print(capital);
+#            print(capital);
             plt.plot(time0[i],price0[i],'bo');
     if spts[i]:
         (capital,share,v) = Trade('sell',praw[0,i],1,capital,share);
         if v:
-            print(capital);
+#            print(capital);
             plt.plot(time0[i],price0[i],'rx');
 
 print("Return rate = %2.2f%%" % ((capital-C)/C*100));
