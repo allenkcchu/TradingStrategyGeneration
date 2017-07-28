@@ -103,32 +103,37 @@ priceB = [];
 timeS = [];
 priceS = [];
 
-enable = (np.random.randint(0,2,(5))==1);
-bparams = np.random.uniform(-1,1,(5));
-comparison = np.random.randint(-2,3,(5));
-for N,i in enumerate(enable):
-    if enable[N]:
-        if comparison[N] == -2:
-            tmp = (pmod[N,:] <= bparams[N]);
-        elif comparison[N] == -1:
-            tmp = (pmod[N,:] < bparams[N]);
-        elif comparison[N] == 0:
-            tmp = (pmod[N,:] == bparams[N]);
-        elif comparison[N] == 1:
-            tmp = (pmod[N,:] > bparams[N]);
-        elif comparison[N] == 2:
-            tmp = (pmod[N,:] >= bparams[N]);
-            
-        if N == 0:
-            bcont = tmp;
-        else:
-            bcont = np.vstack((bcont,tmp));
-#    else:
-#        bcont = (np.ones(np.shape(pmod)) == 0);
+bparams = list([(np.random.randint(0,2,(6))==1),np.random.uniform(-1,1,(6)),np.random.randint(-2,3,(6))]);
+# enable/bparams/comparison
 
-try:
-    bpts = np.all(bcont,0);
-except:
+bcon = [];
+if np.any(bparams[0]):
+    for N,i in enumerate(bparams[0]):
+        if bparams[0][N]:
+            if bparams[2][N] == -2:
+                tmp = (pmod[N,:] <= bparams[1][N]);
+            elif bparams[2][N] == -1:
+                tmp = (pmod[N,:] < bparams[1][N]);
+            elif bparams[2][N] == 0:
+                tmp = (pmod[N,:] == bparams[1][N]);
+            elif bparams[2][N] == 1:
+                tmp = (pmod[N,:] > bparams[1][N]);
+            elif bparams[2][N] == 2:
+                tmp = (pmod[N,:] >= bparams[1][N]);
+                
+            if len(bcon) == 0:
+                bcon = tmp;
+            else:
+                bcon = np.vstack((bcon,tmp));
+
+    try:
+        if np.size(np.shape(bcon)) == 1:
+            bpts = bcon;
+        else:
+            bpts = np.all(bcon,0);
+    except:
+        pass;
+else:
     bpts = np.ones((np.size(pmod,1)))==0
             
 #bcon1 = (pmod[0,:]<bparams[0]);
