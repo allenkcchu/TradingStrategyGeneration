@@ -66,11 +66,17 @@ def targetFunction(data,particleParams,plot):
     # Standarize data
     BBU,BBD = bollingerBand(np.transpose(data[6,:].astype(np.float)),averageLevel);
     volume = np.transpose(data[1,:]).astype(np.float);
+    # raw price
     p0 = np.transpose(data[6,averageLevel:].astype(np.float));
+    # moving average
     p1 = movingAverage(np.transpose(data[6,:].astype(np.float)),averageLevel);
+    # OBV
     p2 = onBalanceVolume(0.5*(np.transpose(data[4,averageLevel:]).astype(np.float)+np.transpose(data[5,averageLevel:]).astype(np.float)),volume,5);
+    # increasing ratio
     p3 = (np.transpose(data[6,averageLevel:].astype(np.float))-np.transpose(data[3,averageLevel:].astype(np.float)))/np.transpose(data[6,averageLevel:].astype(np.float));
+    # bandwidth
     p4 = BBU-BBD;
+    # band-percentage
     p5 = (p0-BBD)/(BBU-BBD)*100;
     praw = np.vstack((p0,p1,p2,p3,p4,p5));
     dpraw = np.diff(praw,1);
