@@ -59,7 +59,7 @@ def Trade(trading,price,dAmount,principal,shareAmount):
         valid = True;
     return (principal,shareAmount,valid)
 
-def targetFunction(particleParams,plot):
+def targetFunction(data,particleParams,plot):
     # particleParams:Benable/Bbparams/Bcomparison/Senable/Sbparams/Scomparison/level
     averageLevel = particleParams[6];
 
@@ -183,16 +183,16 @@ if __name__ == '__main__':
 
 
     # searchingTime/particleAmount
-    iteration = 5;
-    Period = 50;
+#    iteration = 50;
+    Period = 10;
     Number = 20;
     lowerBound = -5;
     upperBound = 5;
-    groupRule = list([Period,Number,[lowerBound,upperBound],iteration]);
+    groupRule = list([Period,Number,[lowerBound,upperBound]]);
     # velocity of bpts/spts
-    Nv = np.random.uniform(-0.09,0.1,(2,6,groupRule[1]));
+    Nv = np.random.uniform(-0.1,0.1,(2,6,groupRule[1]));
     # position of bpts/spts
-    Np = np.random.uniform(-1,1,(2,6,groupRule[1]));
+    Np = np.random.uniform(-5,5,(2,6,groupRule[1]));
     # particle personality
     Nw = np.random.uniform(0,0.5,(2,groupRule[1]));
     Nw = np.concatenate((np.reshape(1-np.sum(Nw,0),(1,groupRule[1])),Nw),0);
@@ -200,23 +200,27 @@ if __name__ == '__main__':
     nProperties = [(np.random.randint(0,2,(2,6,groupRule[1]))==1),np.random.randint(-2,3,(2,6,groupRule[1])),np.random.randint(5,51,groupRule[1])];
 
     # initial best memory
-    NbestPosition = Np;
+    NbestPosition = np.array(Np);
     NbestReturn = np.zeros((groupRule[1]));
     for N in range(groupRule[1]):
-        NbestReturn[N] = targetFunction(list([nProperties[0][0,:,N],Np[0,:,N],nProperties[1][0,:,N],nProperties[0][1,:,N],Np[1,:,N],nProperties[1][1,:,N],nProperties[2][N]]),0);
+        NbestReturn[N] = targetFunction(data,list([nProperties[0][0,:,N],Np[0,:,N],nProperties[1][0,:,N],nProperties[0][1,:,N],Np[1,:,N],nProperties[1][1,:,N],nProperties[2][N]]),0);
 
 
 
 
-    if plot == 1:
+    if plot != 0:
         fig = plt.figure();
     Titerate = 0;
-    while(Titerate<groupRule[3]):
+    error = np.sum(np.sum(np.sum((Np-np.repeat(np.reshape(np.mean(Np,2),(Np.shape[0],Np.shape[1],1)),groupRule[1],2))**2,2),1),0);
+    Time = np.array([]);
+    Error = np.array([]);
+    convergeError = 10;
+    while(~(Titerate>1000 or convergeError<1e-1)):
         T = 0;
         while(T<groupRule[0]):
             for N in range(groupRule[1]):
                 particle = list([nProperties[0][0,:,N],Np[0,:,N],nProperties[1][0,:,N],nProperties[0][1,:,N],Np[1,:,N],nProperties[1][1,:,N],nProperties[2][N]]);
-                evalReturn = targetFunction(particle,0);
+                evalReturn = targetFunction(data,particle,0);
                 if evalReturn>NbestReturn[N]:
                     NbestReturn[N] = evalReturn;
                     NbestPosition[:,:,N] = Np[:,:,N];
@@ -233,32 +237,42 @@ if __name__ == '__main__':
                                 Nv[N,M,L] = -Nv[N,M,L];
                             else:
                                 Np[N,M,L] = k;
+
             if plot == 1:
                 fig.clear();
                 plt.plot(Np[0,0,:],Np[1,0,:],'bo',ms = 20);
                 plt.axis([-5,5,-5,5]);
-                plt.pause(0.01);
+                plt.pause(1e-5);
             T = T+1;
+            Titerate = Titerate+1;
+            error = np.sum(np.sum(np.sum((Np-np.repeat(np.reshape(np.mean(Np,2),(Np.shape[0],Np.shape[1],1)),groupRule[1],2))**2,2),1),0);
+            Time = np.hstack((Time,Titerate));
+            Error = np.hstack((Error,error));
+            if plot == 2:
+                plt.plot(Time,Error,'b-');plt.pause(1e-5);
+            print("Time: %d" % (Titerate));
+            if Titerate>50:
+                convergeError = abs(error-np.sum(Error[-50:])/50);
+                print(convergeError);
+            
+#            print(np.sum(np.sum(np.sum((Np-np.repeat(np.reshape(np.mean(Np,2),(Np.shape[0],Np.shape[1],1)),groupRule[1],2))**2,2),1),0));
 #            print(T);
 
         # Modify velocity
-        selfDv = (NbestPosition-Np)/(groupRule[0]*groupRule[3]);
+        selfDv = (NbestPosition-Np)/(10*groupRule[0]);
         GbestPosition = NbestPosition[:,:,np.where(NbestReturn == np.max(NbestReturn))[0]][:,:,0];
         GbestPosition = np.reshape(GbestPosition,(np.shape(GbestPosition)[0],np.shape(GbestPosition)[1],1));
         GbestPosition = np.repeat(GbestPosition,groupRule[1],2);
-        globalDv = (GbestPosition-Np)/(groupRule[0]*groupRule[3]);
-        intefereFactor = np.random.normal(0,np.float(groupRule[2][1])/(groupRule[0]*groupRule[3]),np.shape(Np));
+        globalDv = (GbestPosition-Np)/(10*groupRule[0]);
+        intefereFactor = np.random.normal(0,np.float(groupRule[2][1])/(100*groupRule[0]),np.shape(Np));
 
 #        Nv = 0.1*Nv+0.3*selfDv+0.6*globalDv;
         for N in range(groupRule[1]):
             Nv[:,:,N] = 0.09*Nv[:,:,N] + 0.01*intefereFactor[:,:,N] + 0.3*selfDv[:,:,N] + 0.6*globalDv[:,:,N];
 
-        Titerate = Titerate+1;
-        print("Round %d\n" % (Titerate));
+        
 
 
     N = np.where(NbestReturn == np.max(NbestReturn))[0][0];
-#    Np = NbestPosition[:,:,N];
-
-particle = list([nProperties[0][0,:,N],NbestPosition[0,:,N],nProperties[1][0,:,N],nProperties[0][1,:,N],NbestPosition[1,:,N],nProperties[1][1,:,N],nProperties[2][N]]);
-evalReturn = targetFunction(particle,1);
+    particle = list([nProperties[0][0,:,N],NbestPosition[0,:,N],nProperties[1][0,:,N],nProperties[0][1,:,N],NbestPosition[1,:,N],nProperties[1][1,:,N],nProperties[2][N]]);
+    evalReturn = targetFunction(data,particle,1);
