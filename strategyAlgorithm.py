@@ -182,16 +182,16 @@ def targetFunction(data,particleParams,plot):
 
 if __name__ == '__main__':
     plt.close('all');
-    plot = 1;
+    plot = 0;
     database = np.load('170508_Database.npy');
     database = database.item();
-    data = database['0056'];
+    data = database['2330'];
 
 
     # searchingTime/particleAmount
 #    iteration = 50;
     Period = 10;
-    Number = 20;
+    Number = 100;
     lowerBound = -5;
     upperBound = 5;
     groupRule = list([Period,Number,[lowerBound,upperBound]]);
@@ -221,9 +221,9 @@ if __name__ == '__main__':
     Time = np.array([]);
     Error = np.array([]);
     convergeError = 10;
-    while(~(Titerate>1000 or convergeError<1e-1)):
+    while(not(Titerate>1000 or convergeError<1e-1)):
         T = 0;
-        while(T<groupRule[0]):
+        while(not(Titerate>1000 or convergeError<1e-1) and T<groupRule[0]):
             for N in range(groupRule[1]):
                 particle = list([nProperties[0][0,:,N],Np[0,:,N],nProperties[1][0,:,N],nProperties[0][1,:,N],Np[1,:,N],nProperties[1][1,:,N],nProperties[2][N]]);
                 evalReturn = targetFunction(data,particle,0);
